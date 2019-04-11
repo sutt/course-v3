@@ -45,6 +45,7 @@ def build_data(
                 size = None,
                 num_workers = None,
                 bypass_validation = True,
+                seed = None
                 ):
 
     _numworkers = {}
@@ -60,6 +61,12 @@ def build_data(
     _size = (216, 324)
     if size is not None:
         _size = size
+
+    _seed = 42
+    if seed is not None:
+        _seed = seed
+
+    np.random.seed(_seed)  # called each time you eneter function
 
     data = (PointsItemList.from_folder(raw_fn)
             .filter_by_func(filter_records)
