@@ -13,7 +13,8 @@ raw_fn = data_dir/'data_training'
 label_fn = data_dir/'truth_df.csv'
 
 if os.name == 'nt':      ##local
-    data_dir = Path('../../../../alphapilot/')
+    # data_dir = Path('../../../../alphapilot/')
+    data_dir = Path('c:/users/wsutt/desktop/files/alphapilot/')  # absolute
     raw_fn = data_dir/'Data_Training/Data_Training/'
     label_fn = data_dir/'truth_df.csv'
 
@@ -23,6 +24,8 @@ assert truth_df.shape == (8, 5827)
 
 TRUTH_INDS  = list(truth_df.columns)
 
+
+#utility functions -----
 def filter_img_by_truth(fn):
     ''' only use data records in truth_df'''
     return fn.name in TRUTH_INDS
@@ -37,7 +40,53 @@ def label_points(fn):
         >use y_first=True in label-load-func
     '''
     p = truth_df[fn.name]
-    return tensor([ [ float(p[i*2+1]), float(p[i*2+0]) ] for i in range(4)])
+    return tensor([ [float(p[i*2+1]), float(p[i*2+0])] for i in range(4)])
+
+
+def get_truth_df():
+    ''' utility for jupyter user to access the base ground truth '''
+    return truth_df
+
+
+### Main notebook helper functions --------------------------------------------------
+
+def avg_prediction(dataset, as_int=False, as_flat=False):
+    '''
+        input: ImageDataBunch
+        returns mean of each y-point in the training-set 
+                as float 
+                    (as_int: as int)
+                as list if list: [[x0,y0],...[yx3,y3]]
+                    (as_flat: [x0,y0,...,x3,y3]), 
+        notes:
+            y.items are in tensor(4by2 floats)
+            we maintain coord order from input-dataset; 
+            expecting & returning x-first(?)
+    '''
+
+    y_coords =  [_item.tolist() for _item in dataset.train_dl.y.items]
+
+    y_flat =    [[item for sublist in _box for item in sublist]
+                  for _box in y_coords]
+
+    sum_y_flat = [sum( [_row[_col] for _row in y_flat] )
+                  for _col, _ in enumerate(y_flat[0])
+                 ]
+    
+    n =         len(y_coords)
+
+    avg_y_flat = [x / n for x in sum_y_flat]
+
+    if as_int:
+        avg_y_flat = [int(x) for x in avg_y_flat]
+
+    if not(as_flat):
+        avg_y_flat = [  [avg_y_flat[_icoord*2+0], avg_y_flat[_icoord*2+1]]
+                        for _icoord in range(len(avg_y_flat) // 2)
+                     ]
+
+    return avg_y_flat
+
 
 
 def build_data(
