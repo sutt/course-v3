@@ -30,6 +30,10 @@ def filter_img_by_truth(fn):
     ''' only use data records in truth_df'''
     return fn.name in TRUTH_INDS
 
+def filter_mini(fn):
+    ''' only use data records in truth_df'''
+    return fn.name in TRUTH_INDS and 'IMG_00' in fn.name
+
 filter_records = filter_img_by_truth
 
 def label_points(fn):
@@ -94,7 +98,8 @@ def build_data(
                 size = None,
                 num_workers = None,
                 bypass_validation = True,
-                seed = None
+                seed = None,
+                mini_data = False,
                 ):
 
     _numworkers = {}
@@ -116,6 +121,10 @@ def build_data(
         _seed = seed
 
     np.random.seed(_seed)  # called each time you eneter function
+
+    filter_records = filter_img_by_truth
+    if mini_data:
+        filter_records = filter_mini
 
     data = (PointsItemList.from_folder(raw_fn)
             .filter_by_func(filter_records)
